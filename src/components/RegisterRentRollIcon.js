@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const RegisterRentRollIcon = ({ propertyId, onNewRentRoll }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -7,7 +9,7 @@ const RegisterRentRollIcon = ({ propertyId, onNewRentRoll }) => {
     roomNumber: "",
     roomUsage: "",
     contractor: "",
-    contractDate: "", // 日付フォーマット維持
+    contractDate: null, // DatePicker利用のためnull初期化
     rentalArea: "",
     rent: "",
     maintenanceFee: "",
@@ -44,6 +46,24 @@ const RegisterRentRollIcon = ({ propertyId, onNewRentRoll }) => {
     renewalFee: "更新料（税込）",
   };
 
+  // 数値項目を定義
+  const numericFields = [
+    "floor",
+    "rentalArea",
+    "rent",
+    "maintenanceFee",
+    "tax",
+    "totalRent",
+    "unitPrice",
+    "parkingFee",
+    "bikeParkingFee",
+    "bicycleParkingFee",
+    "storageFee",
+    "totalFee",
+    "bicycleParkingNumber",
+    "renewalFee",
+  ];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -53,13 +73,41 @@ const RegisterRentRollIcon = ({ propertyId, onNewRentRoll }) => {
       return;
     }
 
+    // contractDateがDateオブジェクトの場合、"yyyy/MM/dd"形式に変換
+    const rentRollToSend = { ...newRentRoll };
+    if (rentRollToSend.contractDate instanceof Date) {
+      const year = rentRollToSend.contractDate.getFullYear();
+      const month = String(rentRollToSend.contractDate.getMonth() + 1).padStart(2, "0");
+      const day = String(rentRollToSend.contractDate.getDate()).padStart(2, "0");
+      rentRollToSend.contractDate = `${year}/${month}/${day}`;
+    } else if (!rentRollToSend.contractDate) {
+      // 未選択の場合はnullを送る
+      rentRollToSend.contractDate = null;
+    }
+
+    // 数値項目のバリデーションと変換
+    for (let field of numericFields) {
+      const val = rentRollToSend[field];
+      if (val === "" || val === null) {
+        // 空文字やnullなら0にする
+        rentRollToSend[field] = 0;
+      } else {
+        const num = Number(val);
+        if (isNaN(num)) {
+          alert(`"${fieldLabels[field]}"に無効な数値が入力されています。正しい値を入力してください。`);
+          return; // バリデーション失敗で送信中断
+        }
+        rentRollToSend[field] = num;
+      }
+    }
+
     try {
       const response = await fetch(
         `http://localhost:8080/api/properties/${propertyId}/rentroll`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newRentRoll),
+          body: JSON.stringify(rentRollToSend),
         }
       );
 
@@ -72,7 +120,7 @@ const RegisterRentRollIcon = ({ propertyId, onNewRentRoll }) => {
           roomNumber: "",
           roomUsage: "",
           contractor: "",
-          contractDate: "",
+          contractDate: null,
           rentalArea: "",
           rent: "",
           maintenanceFee: "",
@@ -112,20 +160,40 @@ const RegisterRentRollIcon = ({ propertyId, onNewRentRoll }) => {
           <div className="bg-white p-6 rounded shadow-md w-96 max-h-screen overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">レントロール新規登録</h2>
             <form onSubmit={handleSubmit}>
-              {Object.keys(newRentRoll).map((key) => (
-                <div key={key} className="mb-4">
-                  <label className="block text-gray-700 mb-2">{fieldLabels[key]}:</label>
-                  <input
-                    type="text"
-                    className="border rounded p-2 w-full"
-                    value={newRentRoll[key]}
-                    onChange={(e) =>
-                      setNewRentRoll({ ...newRentRoll, [key]: e.target.value })
-                    }
-                    required={key !== "bicycleParkingNumber"}
-                  />
-                </div>
-              ))}
+              {Object.keys(newRentRoll).map((key) => {
+                if (key === "contractDate") {
+                  // 日付フィールド
+                  return (
+                    <div key={key} className="mb-4">
+                      <label className="block text-gray-700 mb-2">{fieldLabels[key]}:</label>
+                      <DatePicker
+                        selected={newRentRoll.contractDate}
+                        onChange={(date) => setNewRentRoll({ ...newRentRoll, contractDate: date })}
+                        dateFormat="yyyy/MM/dd"
+                        placeholderText="日付を選択"
+                        className="border rounded p-2 w-full"
+                      />
+                    </div>
+                  );
+                } else {
+                  // その他フィールド
+                  const isNumeric = numericFields.includes(key);
+                  return (
+                    <div key={key} className="mb-4">
+                      <label className="block text-gray-700 mb-2">{fieldLabels[key]}:</label>
+                      <input
+                        type={isNumeric ? "number" : "text"}
+                        className="border rounded p-2 w-full"
+                        value={newRentRoll[key] || ""}
+                        onChange={(e) =>
+                          setNewRentRoll({ ...newRentRoll, [key]: e.target.value })
+                        }
+                        required={key !== "bicycleParkingNumber"} 
+                      />
+                    </div>
+                  );
+                }
+              })}
               <div className="flex justify-end">
                 <button
                   type="button"
