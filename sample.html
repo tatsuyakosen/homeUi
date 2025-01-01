@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表の作成</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            text-align: center;
+            padding: 5px;
+        }
+        th {
+            background-color: #dfffd7; /* 緑がかった背景色 */
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <tr>
+            <th rowspan="2">階</th>
+            <th rowspan="2">No.</th>
+            <th rowspan="2">用途</th>
+            <th rowspan="2">契約者</th>
+            <th colspan="4">預託金等</th>
+        </tr>
+        <tr>
+            <th>敷金</th>
+            <th>数引</th>
+            <th>保証金</th>
+            <th>礼金</th>
+        </tr>
+    </table>
+</body>
+</html>

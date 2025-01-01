@@ -73,23 +73,29 @@ const RegisterRentRollIcon = ({ propertyId, onNewRentRoll }) => {
       return;
     }
 
-    // contractDateがDateオブジェクトの場合、"yyyy/MM/dd"形式に変換
     const rentRollToSend = { ...newRentRoll };
+
+    // contractDateがDateオブジェクトの場合、"yyyy/MM/dd"形式に変換
     if (rentRollToSend.contractDate instanceof Date) {
       const year = rentRollToSend.contractDate.getFullYear();
       const month = String(rentRollToSend.contractDate.getMonth() + 1).padStart(2, "0");
       const day = String(rentRollToSend.contractDate.getDate()).padStart(2, "0");
       rentRollToSend.contractDate = `${year}/${month}/${day}`;
     } else if (!rentRollToSend.contractDate) {
-      // 未選択の場合はnullを送る
       rentRollToSend.contractDate = null;
     }
+
+    // createdAtフィールド追加 ( "yyyy/MM/dd"形式 )
+    const now = new Date();
+    const cYear = now.getFullYear();
+    const cMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const cDay = String(now.getDate()).padStart(2, '0');
+    rentRollToSend.createdAt = `${cYear}/${cMonth}/${cDay}`;
 
     // 数値項目のバリデーションと変換
     for (let field of numericFields) {
       const val = rentRollToSend[field];
       if (val === "" || val === null) {
-        // 空文字やnullなら0にする
         rentRollToSend[field] = 0;
       } else {
         const num = Number(val);
@@ -162,7 +168,6 @@ const RegisterRentRollIcon = ({ propertyId, onNewRentRoll }) => {
             <form onSubmit={handleSubmit}>
               {Object.keys(newRentRoll).map((key) => {
                 if (key === "contractDate") {
-                  // 日付フィールド
                   return (
                     <div key={key} className="mb-4">
                       <label className="block text-gray-700 mb-2">{fieldLabels[key]}:</label>
@@ -176,7 +181,6 @@ const RegisterRentRollIcon = ({ propertyId, onNewRentRoll }) => {
                     </div>
                   );
                 } else {
-                  // その他フィールド
                   const isNumeric = numericFields.includes(key);
                   return (
                     <div key={key} className="mb-4">

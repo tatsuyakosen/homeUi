@@ -6,6 +6,11 @@ const RentRoll = ({ propertyId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // 現在の年と月を初期値にする
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+
   const fetchRentRollData = async () => {
     try {
       console.log("Fetching data for property ID:", propertyId);
@@ -37,7 +42,6 @@ const RentRoll = ({ propertyId }) => {
     }
   };
 
-  // 新しいレントロールデータを追加する関数
   const handleNewRentRoll = (newRentRoll) => {
     setRentRollData((prevData) => [...prevData, newRentRoll]);
   };
@@ -59,17 +63,67 @@ const RentRoll = ({ propertyId }) => {
     return <p className="text-red-500">{error}</p>;
   }
 
+  // 年選択用のプルダウン
+  // 必要に応じて選択肢を増やしたり、動的に生成したりできます。
+  const yearSelect = (
+    <div className="mb-4">
+      
+      <select
+        value={selectedYear}
+        onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+        className="border rounded p-1"
+      >
+        <option value={2022}>2022年</option>
+        <option value={2023}>2023年</option>
+        <option value={2024}>2024年</option>
+        <option value={2025}>2025年</option>
+      </select>
+    </div>
+  );
+
+  // 月選択タブ
+  const monthTabs = (
+    <div className="flex space-x-2 mb-4">
+      {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+        <button
+          key={month}
+          onClick={() => setSelectedMonth(month)}
+          className={`px-3 py-1 rounded ${selectedMonth === month ? "bg-blue-500 text-white" : "bg-gray-200 text-black"}`}
+        >
+          {month}月
+        </button>
+      ))}
+    </div>
+  );
+
+  // createdAt をもとにフィルタ
+  const filteredData = rentRollData.filter((item) => {
+    if (!item.createdAt) return false;
+    // createdAtは"yyyy/MM/dd"形式と仮定
+    const yearStr = item.createdAt.slice(0, 4);  // yyyy
+    const monthStr = item.createdAt.slice(5, 7); // MM
+    const itemYear = parseInt(yearStr, 10);
+    const itemMonth = parseInt(monthStr, 10);
+
+    return itemYear === selectedYear && itemMonth === selectedMonth;
+  });
+
   return (
     <div className="bg-white rounded-lg shadow p-4 relative">
-      {/* レントロール表 */}
       <h3 className="text-lg font-semibold mb-4">{propertyId} のレントロール</h3>
       <div className="absolute top-4 right-4">
-        {/* 新規登録アイコン */}
         <RegisterRentRollIcon
           propertyId={propertyId}
-          onNewRentRoll={handleNewRentRoll} // 新規登録時のコールバック
+          onNewRentRoll={handleNewRentRoll}
         />
       </div>
+
+      {/* 年選択プルダウン */}
+      {yearSelect}
+
+      {/* 月タブ */}
+      {monthTabs}
+
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto border-collapse">
           <thead className="bg-gray-50">
@@ -95,28 +149,36 @@ const RentRoll = ({ propertyId }) => {
             </tr>
           </thead>
           <tbody>
-            {rentRollData.map((item) => (
-              <tr key={item.id}>
-                <td className="border px-4 py-2">{item.floor}</td>
-                <td className="border px-4 py-2">{item.roomNumber}</td>
-                <td className="border px-4 py-2">{item.roomUsage}</td>
-                <td className="border px-4 py-2">{item.contractor}</td>
-                <td className="border px-4 py-2">{item.contractDate}</td>
-                <td className="border px-4 py-2">{item.rentalArea}</td>
-                <td className="border px-4 py-2">{item.rent}</td>
-                <td className="border px-4 py-2">{item.maintenanceFee}</td>
-                <td className="border px-4 py-2">{item.tax}</td>
-                <td className="border px-4 py-2">{item.totalRent}</td>
-                <td className="border px-4 py-2">{item.unitPrice}</td>
-                <td className="border px-4 py-2">{item.parkingFee}</td>
-                <td className="border px-4 py-2">{item.bikeParkingFee}</td>
-                <td className="border px-4 py-2">{item.bicycleParkingFee}</td>
-                <td className="border px-4 py-2">{item.storageFee}</td>
-                <td className="border px-4 py-2">{item.totalFee}</td>
-                <td className="border px-4 py-2">{item.bicycleParkingNumber}</td>
-                <td className="border px-4 py-2">{item.renewalFee}</td>
+            {filteredData.length === 0 ? (
+              <tr>
+                <td colSpan="18" className="border px-4 py-2 text-center">
+                  選択した年・月のデータがありません。
+                </td>
               </tr>
-            ))}
+            ) : (
+              filteredData.map((item) => (
+                <tr key={item.id}>
+                  <td className="border px-4 py-2">{item.floor}</td>
+                  <td className="border px-4 py-2">{item.roomNumber}</td>
+                  <td className="border px-4 py-2">{item.roomUsage}</td>
+                  <td className="border px-4 py-2">{item.contractor}</td>
+                  <td className="border px-4 py-2">{item.contractDate}</td>
+                  <td className="border px-4 py-2">{item.rentalArea}</td>
+                  <td className="border px-4 py-2">{item.rent}</td>
+                  <td className="border px-4 py-2">{item.maintenanceFee}</td>
+                  <td className="border px-4 py-2">{item.tax}</td>
+                  <td className="border px-4 py-2">{item.totalRent}</td>
+                  <td className="border px-4 py-2">{item.unitPrice}</td>
+                  <td className="border px-4 py-2">{item.parkingFee}</td>
+                  <td className="border px-4 py-2">{item.bikeParkingFee}</td>
+                  <td className="border px-4 py-2">{item.bicycleParkingFee}</td>
+                  <td className="border px-4 py-2">{item.storageFee}</td>
+                  <td className="border px-4 py-2">{item.totalFee}</td>
+                  <td className="border px-4 py-2">{item.bicycleParkingNumber}</td>
+                  <td className="border px-4 py-2">{item.renewalFee}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

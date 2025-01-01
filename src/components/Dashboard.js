@@ -5,10 +5,7 @@ import Sidebar from './Sidebar';
 import RentRoll from './RentRoll';
 
 const Dashboard = () => {
-  const { propertyId } = useParams(); // propertyId を取得
-
-  // デバッグログ
-  console.log("Property ID passed to Dashboard:", propertyId);
+  const { propertyId } = useParams();
 
   if (!propertyId) {
     return <p>物件IDが見つかりません。URLを確認してください。</p>;
@@ -16,14 +13,10 @@ const Dashboard = () => {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
-      {/* ヘッダー */}
       <Header propertyId={propertyId} />
-
       <div className="flex flex-1">
-        {/* サイドバー */}
-        <Sidebar />
-
-        {/* メインコンテンツ */}
+        {/* propertyIdをSidebarに渡す */}
+        <Sidebar propertyId={propertyId} />
         <div className="flex-1 p-4">
           <RentRoll propertyId={propertyId} />
         </div>
